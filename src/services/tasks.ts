@@ -87,10 +87,10 @@ export function updateTask(id: string, opts: UpdateTaskOptions): Task {
       opts.description !== undefined ? opts.description : task.description,
       opts.status ?? task.status,
       ts,
-      id,
+      task.id,
     ]
   );
-  return getTask(id)!;
+  return getTask(task.id)!;
 }
 
 export function deleteTask(id: string): boolean {

@@ -1,6 +1,6 @@
 {
-  "name": "viban",
-  "version": "0.1.0",
+  "name": "viban-cli",
+  "version": "1.0.0",
   "description": "A Kanban-style board in your CLI, powered by local SQLite",
   "bin": {
     "viban": "./dist/viban"
@@ -18,9 +18,12 @@
     "cli",
     "tasks",
     "board",
-    "productivity"
+    "productivity",
+    "vibe code",
+    "vibe kanban",
+    "agent kanban"
   ],
-  "author": "",
+  "author": "Vance Lucas <vance@vancelucas.com>",
   "license": "MIT",
   "dependencies": {
     "chalk": "^5.6.2",
