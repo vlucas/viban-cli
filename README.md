@@ -47,6 +47,8 @@ viban board -p myproject   # Show only a specific project's board
 
 ### Tasks
 
+![viban tasks:list](img/viban-tasks-list.png)
+
 ```bash
 # List all tasks
 viban tasks:list
@@ -78,8 +80,6 @@ viban tasks:archive -d 0               # Archive all done tasks immediately
 # Delete a task
 viban tasks:delete <task-id>
 ```
-
-![viban tasks:list](img/viban-tasks-list.png)
 
 ### Projects
 
@@ -128,6 +128,36 @@ Tasks move through the following workflow statuses. The `archived` status is set
 | `in_review`   | `review`, `inreview`, `in review`  |                                                 |
 | `done`        |                                    |                                                 |
 | `archived`    |                                    | Set via `tasks:archive` only; hidden from board |
+
+## AI Agent Integration
+
+viban ships with a `SKILL.md` file that instructs AI agents (Claude, Cursor, Copilot, etc.) to track their work on the Kanban board in real time as they complete tasks — so you can see exactly what your agents are doing without having to ask.
+
+### Installing SKILL.md
+
+Copy `SKILL.md` into any project where you want agents to track their work. Agents pick it up automatically when it is present in the project root.
+
+```bash
+# From the viban-cli repo
+cp SKILL.md /path/to/your/project/SKILL.md
+```
+
+Or download it directly into your project:
+
+```bash
+curl -o SKILL.md https://raw.githubusercontent.com/vlucas/viban-cli/main/SKILL.md
+```
+
+### How It Works
+
+Once `SKILL.md` is in your project, an AI agent working in that directory will:
+
+1. Create a viban task when it starts a unit of work
+2. Move it to `in_progress` when it begins
+3. Move it to `in_review` when it needs your attention
+4. Mark it `done` when complete
+
+Run `viban board` at any time to see a live view of what your agents are doing.
 
 ## Data Storage
 
