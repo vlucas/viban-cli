@@ -1,6 +1,6 @@
 {
   "name": "viban-cli",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A Kanban-style board in your CLI, powered by local SQLite",
   "bin": {
     "viban": "./dist/viban"
