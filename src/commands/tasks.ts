@@ -6,6 +6,7 @@ import {
   createTask,
   updateTask,
   deleteTask,
+  archiveTasks,
 } from '../services/tasks.ts';
 import { getProject } from '../services/projects.ts';
 import { inferTitle } from '../utils/infer.ts';
@@ -31,11 +32,12 @@ export function registerTaskCommands(program: Command) {
     .command('tasks:list')
     .description('List tasks (all projects by default)')
     .option('-p, --project <project>', 'Filter by project name or ID')
-    .option('-s, --status <status>', 'Filter by status')
+    .option('-s, --status <status>', 'Filter by status (use "archived" to show archived tasks)')
     .action((opts: { project?: string; status?: string }) => {
-      let tasks = listTasks(opts.project);
+      const archivedOnly = opts.status?.toLowerCase() === 'archived';
+      let tasks = listTasks(opts.project, archivedOnly);
 
-      if (opts.status) {
+      if (opts.status && !archivedOnly) {
         const filterStatus = parseStatus(opts.status);
         tasks = tasks.filter((t) => t.status === filterStatus);
       }
@@ -50,7 +52,7 @@ export function registerTaskCommands(program: Command) {
       console.log(chalk.dim('  ' + '─'.repeat(80)));
       console.log(
         chalk.dim(
-          `  ${'ID'.padEnd(31)}  ${'Status'.padEnd(14)}  ${'Project'.padEnd(12)}  Name`
+          `  ${'Name'.padEnd(40)}  ${'Status'.padEnd(14)}  ${'Project'.padEnd(12)}  ID`
         )
       );
       console.log(chalk.dim('  ' + '─'.repeat(80)));
@@ -58,8 +60,9 @@ export function registerTaskCommands(program: Command) {
         const project = getProject(task.project_id);
         const projectName = (project?.name ?? '?').substring(0, 12);
         const statusLabel = (STATUS_LABELS[task.status] ?? task.status).padEnd(14);
+        const nameCol = task.name.length > 40 ? task.name.substring(0, 37) + '...' : task.name.padEnd(40);
         console.log(
-          `  ${chalk.cyan(taskTypeId(task.id).padEnd(31))}  ${colorStatus(task.status).padEnd(14 + (colorStatus(task.status).length - statusLabel.trimEnd().length))}  ${chalk.dim(projectName.padEnd(12))}  ${task.name}`
+          `  ${nameCol}  ${colorStatus(task.status).padEnd(14 + (colorStatus(task.status).length - statusLabel.trimEnd().length))}  ${chalk.dim(projectName.padEnd(12))}  ${chalk.cyan(taskTypeId(task.id))}`
         );
       }
       console.log('');
@@ -162,6 +165,26 @@ export function registerTaskCommands(program: Command) {
         chalk.green('✓') +
           ` Moved ${chalk.cyan(taskTypeId(task.id))} → ${colorStatus(task.status)}`
       );
+    });
+
+  // ── tasks:archive ────────────────────────────────────────────────────────────
+  program
+    .command('tasks:archive')
+    .description('Archive done tasks older than N days (default: 14). Archived tasks are hidden from the board.')
+    .option('-p, --project <project>', 'Scope to a specific project')
+    .option('-d, --days <days>', 'Archive done tasks last updated more than this many days ago', '14')
+    .action((opts: { project?: string; days: string }) => {
+      const days = parseInt(opts.days, 10);
+      if (isNaN(days) || days < 0) {
+        console.error(chalk.red('--days must be a non-negative integer.'));
+        process.exit(1);
+      }
+      const count = archiveTasks(days, opts.project);
+      if (count === 0) {
+        console.log(chalk.dim(`No done tasks older than ${days} day${days === 1 ? '' : 's'} found.`));
+      } else {
+        console.log(chalk.green('✓') + ` Archived ${count} task${count === 1 ? '' : 's'} (done for more than ${days} day${days === 1 ? '' : 's'}).`);
+      }
     });
 
   // ── tasks:delete ─────────────────────────────────────────────────────────────

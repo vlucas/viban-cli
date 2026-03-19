@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import { getTasksByStatus } from '../services/tasks.ts';
-import { getProject } from '../services/projects.ts';
+import { listProjects, getProject } from '../services/projects.ts';
 import { TASK_STATUSES, STATUS_LABELS, type Task, type TaskStatus } from '../types.ts';
 import { taskTypeId } from '../utils/typeid.ts';
 
@@ -115,49 +115,83 @@ function equalizeColumns(columns: string[][], W: number): string[][] {
   });
 }
 
+function renderBoard(
+  projectName: string,
+  tasksByStatus: Map<TaskStatus, Task[]>,
+  W: number,
+  GAP: number,
+  boardWidth: number
+) {
+  const columns = TASK_STATUSES.map((status) =>
+    buildColumn(status, tasksByStatus.get(status) ?? [], W)
+  );
+  const equalized = equalizeColumns(columns, W);
+
+  // Sum only workflow statuses — excludes 'archived' which is not in TASK_STATUSES
+  const total = TASK_STATUSES.reduce((acc, s) => acc + (tasksByStatus.get(s)?.length ?? 0), 0);
+  const done = tasksByStatus.get('done')?.length ?? 0;
+
+  // Project heading
+  console.log('  ' + chalk.bold.cyan(projectName) + chalk.dim('  ' + done + '/' + total + ' tasks done'));
+  console.log('  ' + chalk.dim('─'.repeat(boardWidth)));
+
+  // Board rows
+  const height = equalized[0].length;
+  for (let row = 0; row < height; row++) {
+    console.log('  ' + equalized.map((col) => col[row]).join(' '.repeat(GAP)));
+  }
+}
+
 export function registerBoardCommand(program: Command) {
   program
     .command('board')
-    .description('Display the Kanban board')
-    .option('-p, --project <project>', 'Project name or ID (default: shows all)')
+    .description('Display the Kanban board, one board per project')
+    .option('-p, --project <project>', 'Show only the board for a specific project')
     .action((opts: { project?: string }) => {
-      const tasksByStatus = getTasksByStatus(opts.project);
-
       // Determine column width from terminal
       const termWidth = process.stdout.columns || 120;
       const GAP = 2;
       const BORDERS = 4; // '│  ' + ' │'
-      const W = Math.max(14, Math.floor((termWidth - TASK_STATUSES.length * BORDERS - (TASK_STATUSES.length - 1) * GAP) / TASK_STATUSES.length));
+      const INDENT = 2; // leading '  ' on each printed row
+      const W = Math.max(14, Math.floor((termWidth - INDENT - TASK_STATUSES.length * BORDERS - (TASK_STATUSES.length - 1) * GAP) / TASK_STATUSES.length));
+      const boardWidth = TASK_STATUSES.length * (W + BORDERS) + (TASK_STATUSES.length - 1) * GAP;
 
-      const columns = TASK_STATUSES.map((status) =>
-        buildColumn(status, tasksByStatus.get(status) ?? [], W)
-      );
-
-      const equalized = equalizeColumns(columns, W);
-
-      // Board title
-      let title = 'Kanban Board';
       if (opts.project) {
+        // Single-project mode
         const project = getProject(opts.project);
-        if (project) title = `Board: ${project.name}`;
-      } else if (!opts.project) {
-        title = 'Board: all projects';
-      }
-      console.log('');
-      console.log('  ' + chalk.bold(title));
-      console.log('');
-
-      // Print rows
-      const height = equalized[0].length;
-      for (let row = 0; row < height; row++) {
-        console.log('  ' + equalized.map((col) => col[row]).join(' '.repeat(GAP)));
+        if (!project) {
+          console.error(chalk.red(`Project not found: "${opts.project}"`));
+          process.exit(1);
+        }
+        console.log('');
+        renderBoard(project.name, getTasksByStatus(project.name), W, GAP, boardWidth);
+        console.log('');
+        return;
       }
 
-      // Summary
-      const total = [...tasksByStatus.values()].reduce((acc, arr) => acc + arr.length, 0);
-      const done = tasksByStatus.get('done')?.length ?? 0;
+      // All-projects mode: sort by most recent task activity
+      const projects = listProjects();
+      if (projects.length === 0) {
+        console.log(chalk.dim('No projects yet. Create one with: viban projects:new <name>'));
+        return;
+      }
+
+      const entries = projects.map((proj) => {
+        const tasksByStatus = getTasksByStatus(proj.name);
+        const allTasks = [...tasksByStatus.values()].flat();
+        const latestTs = allTasks.reduce(
+          (max, t) => (t.updated_at > max ? t.updated_at : max),
+          proj.created_at
+        );
+        return { proj, tasksByStatus, latestTs };
+      });
+
+      entries.sort((a, b) => b.latestTs.localeCompare(a.latestTs));
+
       console.log('');
-      console.log(chalk.dim(`  ${done}/${total} tasks done`));
-      console.log('');
+      for (const { proj, tasksByStatus } of entries) {
+        renderBoard(proj.name, tasksByStatus, W, GAP, boardWidth);
+        console.log('');
+      }
     });
 }

@@ -30,22 +30,26 @@ function resolveProject(idOrName?: string) {
   return project;
 }
 
-export function listTasks(projectIdOrName?: string): Task[] {
+export function listTasks(projectIdOrName?: string, archivedOnly = false): Task[] {
+  const statusFilter = archivedOnly ? `status = 'archived'` : `status != 'archived'`;
+
   if (projectIdOrName && projectIdOrName !== 'default') {
     const project = getProject(projectIdOrName);
     if (!project) throw new Error(`Project not found: "${projectIdOrName}"`);
     return db
-      .query('SELECT * FROM tasks WHERE project_id = ? ORDER BY created_at ASC')
+      .query(`SELECT * FROM tasks WHERE project_id = ? AND ${statusFilter} ORDER BY updated_at DESC`)
       .all(project.id) as Task[];
   }
   if (!projectIdOrName) {
-    return db.query('SELECT * FROM tasks ORDER BY created_at ASC').all() as Task[];
+    return db
+      .query(`SELECT * FROM tasks WHERE ${statusFilter} ORDER BY updated_at DESC`)
+      .all() as Task[];
   }
   // "default"
   const project = getProject('default');
   if (!project) return [];
   return db
-    .query('SELECT * FROM tasks WHERE project_id = ? ORDER BY created_at ASC')
+    .query(`SELECT * FROM tasks WHERE project_id = ? AND ${statusFilter} ORDER BY updated_at DESC`)
     .all(project.id) as Task[];
 }
 
@@ -109,4 +113,33 @@ export function getTasksByStatus(projectIdOrName?: string): Map<TaskStatus, Task
     map.set(task.status, bucket);
   }
   return map;
+}
+
+/**
+ * Archive all 'done' tasks whose updated_at is older than `olderThanDays` days.
+ * Optionally scoped to a single project. Returns the number of tasks archived.
+ */
+export function archiveTasks(olderThanDays = 14, projectIdOrName?: string): number {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - olderThanDays);
+  const cutoffStr = cutoff.toISOString();
+  const ts = now();
+
+  if (projectIdOrName) {
+    const project = resolveProject(projectIdOrName);
+    db.run(
+      `UPDATE tasks SET status = 'archived', updated_at = ?
+       WHERE project_id = ? AND status = 'done' AND updated_at <= ?`,
+      [ts, project.id, cutoffStr]
+    );
+  } else {
+    db.run(
+      `UPDATE tasks SET status = 'archived', updated_at = ?
+       WHERE status = 'done' AND updated_at <= ?`,
+      [ts, cutoffStr]
+    );
+  }
+
+  const row = db.query('SELECT changes() as n').get() as { n: number };
+  return row.n;
 }

@@ -17,7 +17,7 @@ export function registerProjectCommands(program: Command) {
       console.log(chalk.bold('  Projects'));
       console.log(chalk.dim('  ' + '─'.repeat(50)));
       for (const p of projects) {
-        console.log(`  ${chalk.cyan(projectTypeId(p.id).padEnd(31))}  ${chalk.white(p.name)}`);
+        console.log(`  ${chalk.white(p.name.padEnd(30))}  ${chalk.cyan(projectTypeId(p.id))}`);
       }
       console.log('');
     });

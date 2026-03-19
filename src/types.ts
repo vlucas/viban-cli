@@ -1,5 +1,5 @@
 export const TASK_STATUSES = ['ready', 'todo', 'in_progress', 'in_review', 'done'] as const;
-export type TaskStatus = (typeof TASK_STATUSES)[number];
+export type TaskStatus = (typeof TASK_STATUSES)[number] | 'archived';
 
 export const STATUS_LABELS: Record<TaskStatus, string> = {
   ready: 'READY',
@@ -7,6 +7,7 @@ export const STATUS_LABELS: Record<TaskStatus, string> = {
   in_progress: 'IN PROGRESS',
   in_review: 'IN REVIEW',
   done: 'DONE',
+  archived: 'ARCHIVED',
 };
 
 export interface Project {
@@ -44,7 +45,9 @@ export function parseStatus(input: string): TaskStatus {
   const aliased = aliases[input.toLowerCase()];
   if (aliased) return aliased;
 
+  if (input.toLowerCase() === 'archived') return 'archived';
+
   throw new Error(
-    `Invalid status "${input}". Valid statuses: ${TASK_STATUSES.join(', ')}`
+    `Invalid status "${input}". Valid statuses: ${TASK_STATUSES.join(', ')}, archived`
   );
 }

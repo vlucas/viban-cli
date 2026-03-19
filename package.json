@@ -8,7 +8,9 @@
   "scripts": {
     "dev": "bun run src/index.ts",
     "build": "bun build src/index.ts --compile --outfile dist/viban --target bun",
-    "prepublishOnly": "bun run build"
+    "prepublishOnly": "bun run build",
+    "test": "VIBAN_DB=:memory: bun test",
+    "seed": "bun run scripts/seed.ts"
   },
   "files": [
     "dist/"
