@@ -1,6 +1,6 @@
 # viban
 
-A Kanban-style board in your CLI, powered by local SQLite.
+A Kanban-style board in your CLI, powered by local SQLite. See what your AI agents are doing, visually.
 
 ![viban board](img/viban-board.png)
 
@@ -99,35 +99,35 @@ viban projects:delete myproject -f   # Skip confirmation prompt
 
 ## Flags Reference
 
-| Command | Flag | Description |
-|---|---|---|
-| `board` | `-p, --project <project>` | Show only a specific project's board |
-| `tasks:list` | `-p, --project <project>` | Filter by project name or ID |
-| `tasks:list` | `-s, --status <status>` | Filter by status (use `archived` to show archived tasks) |
-| `tasks:new` | `-n, --name <name>` | Task name/title |
-| `tasks:new` | `-d, --description <desc>` | Task description |
-| `tasks:new` | `-p, --project <project>` | Project name or ID (default: "default") |
-| `tasks:new` | `-s, --status <status>` | Initial status (default: ready) |
-| `tasks:update` | `-n, --name <name>` | New name |
-| `tasks:update` | `-d, --description <desc>` | New description |
-| `tasks:update` | `-s, --status <status>` | New status |
-| `tasks:update` | `-p, --project <project>` | Move to a different project |
-| `tasks:archive` | `-p, --project <project>` | Scope archiving to a specific project |
-| `tasks:archive` | `-d, --days <days>` | Cutoff in days (default: 14) |
-| `projects:delete` | `-f, --force` | Skip confirmation prompt |
+| Command           | Flag                       | Description                                              |
+| ----------------- | -------------------------- | -------------------------------------------------------- |
+| `board`           | `-p, --project <project>`  | Show only a specific project's board                     |
+| `tasks:list`      | `-p, --project <project>`  | Filter by project name or ID                             |
+| `tasks:list`      | `-s, --status <status>`    | Filter by status (use `archived` to show archived tasks) |
+| `tasks:new`       | `-n, --name <name>`        | Task name/title                                          |
+| `tasks:new`       | `-d, --description <desc>` | Task description                                         |
+| `tasks:new`       | `-p, --project <project>`  | Project name or ID (default: "default")                  |
+| `tasks:new`       | `-s, --status <status>`    | Initial status (default: ready)                          |
+| `tasks:update`    | `-n, --name <name>`        | New name                                                 |
+| `tasks:update`    | `-d, --description <desc>` | New description                                          |
+| `tasks:update`    | `-s, --status <status>`    | New status                                               |
+| `tasks:update`    | `-p, --project <project>`  | Move to a different project                              |
+| `tasks:archive`   | `-p, --project <project>`  | Scope archiving to a specific project                    |
+| `tasks:archive`   | `-d, --days <days>`        | Cutoff in days (default: 14)                             |
+| `projects:delete` | `-f, --force`              | Skip confirmation prompt                                 |
 
 ## Task Statuses
 
 Tasks move through the following workflow statuses. The `archived` status is set automatically by `tasks:archive` and hides tasks from the board.
 
-| Status       | Aliases                            | Notes                        |
-|--------------|------------------------------------|------------------------------|
-| `ready`      |                                    |                              |
-| `todo`       |                                    |                              |
-| `in_progress`| `wip`, `inprogress`, `in progress` |                              |
-| `in_review`  | `review`, `inreview`, `in review`  |                              |
-| `done`       |                                    |                              |
-| `archived`   |                                    | Set via `tasks:archive` only; hidden from board |
+| Status        | Aliases                            | Notes                                           |
+| ------------- | ---------------------------------- | ----------------------------------------------- |
+| `ready`       |                                    |                                                 |
+| `todo`        |                                    |                                                 |
+| `in_progress` | `wip`, `inprogress`, `in progress` |                                                 |
+| `in_review`   | `review`, `inreview`, `in review`  |                                                 |
+| `done`        |                                    |                                                 |
+| `archived`    |                                    | Set via `tasks:archive` only; hidden from board |
 
 ## Data Storage
 
@@ -135,4 +135,4 @@ viban stores all data in a local SQLite database at `~/.viban/db.sqlite`. You ca
 
 ## License
 
-MIT
+BSD-3-Clause
