@@ -5,6 +5,7 @@ import { registerInitCommand } from './commands/init.ts';
 import { registerProjectCommands } from './commands/projects.ts';
 import { registerTaskCommands } from './commands/tasks.ts';
 import { registerBoardCommand } from './commands/board.ts';
+import { version } from '../package.json';
 
 process.on('uncaughtException', (err) => {
   console.error(chalk.red('Error: ') + (err.message ?? String(err)));
@@ -16,7 +17,7 @@ const program = new Command();
 program
   .name('viban')
   .description('A Kanban-style board in your CLI')
-  .version('0.1.0');
+  .version(version, '-v, --version');
 
 registerInitCommand(program);
 registerProjectCommands(program);

@@ -4,6 +4,19 @@ A Kanban-style board in your CLI, powered by local SQLite. See what your AI agen
 
 ![viban board](img/viban-board.png)
 
+## Requirements
+
+[Bun](https://bun.sh) is required to use and run `viban`. You must have Bun installed on your system before attempting
+to use it, or you will get errors doing so:
+
+```bash
+# macOS/Linux
+curl -fsSL https://bun.sh/install | bash
+
+# Windows
+powershell -c "irm bun.sh/install.ps1 | iex"
+```
+
 ## Installation
 
 ```bash
